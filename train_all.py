@@ -76,8 +76,15 @@ def main(name: str,
          output_dir: str,
          pretrained_model_path: str,
 
-         train_data: Dict,
-         validation_data: Dict,
+         train_data_bokehK: Dict,
+         train_data_temp: Dict,
+         train_data_focal: Dict,
+         train_data_shutter: Dict,
+
+         validation_data_bokehK: Dict,
+         validation_data_temp: Dict,
+         validation_data_focal: Dict,
+         validation_data_shutter: Dict,
          cfg_random_null_text: bool = True,
          cfg_random_null_text_ratio: float = 0.1,
 
@@ -240,10 +247,10 @@ def main(name: str,
 
     # Get the training dataset
     logger.info(f'Building training datasets')
-    ds_bokehK = CameraBokehK(**train_data)
-    ds_temp = CameraColorTemperature(**train_data)
-    ds_focal = CameraFocalLength(**train_data)
-    ds_shutter = CameraShutterSpeed(**train_data)
+    ds_bokehK = CameraBokehK(**train_data_bokehK)
+    ds_temp = CameraColorTemperature(**train_data_temp)
+    ds_focal = CameraFocalLength(**train_data_focal)
+    ds_shutter = CameraShutterSpeed(**train_data_shutter)
 
     train_dataset = ConcatDataset([ds_bokehK, ds_temp, ds_focal, ds_shutter])
     distributed_sampler = DistributedSampler(
@@ -267,10 +274,10 @@ def main(name: str,
 
     # Get the validation dataset
     logger.info(f'Building validation datasets')
-    val_ds_bokehK = CameraBokehK(**validation_data)
-    val_ds_temp = CameraColorTemperature(**validation_data)
-    val_ds_focal = CameraFocalLength(**validation_data)
-    val_ds_shutter = CameraShutterSpeed(**validation_data)
+    val_ds_bokehK = CameraBokehK(**validation_data_bokehK)
+    val_ds_temp = CameraColorTemperature(**validation_data_temp)
+    val_ds_focal = CameraFocalLength(**validation_data_focal)
+    val_ds_shutter = CameraShutterSpeed(**validation_data_shutter)
 
     validation_dataset = ConcatDataset([val_ds_bokehK, val_ds_temp, val_ds_focal, val_ds_shutter])
     validation_dataloader = torch.utils.data.DataLoader(
@@ -481,16 +488,16 @@ def main(name: str,
                 generator = torch.Generator(device=latents.device)
                 generator.manual_seed(global_seed)
 
-                if isinstance(train_data, omegaconf.listconfig.ListConfig):
-                    height = train_data[0].sample_size[0] if not isinstance(train_data[0].sample_size, int) else \
-                    train_data[0].sample_size
-                    width = train_data[0].sample_size[1] if not isinstance(train_data[0].sample_size, int) else \
-                    train_data[0].sample_size
+                if isinstance(train_data_bokehK, omegaconf.listconfig.ListConfig):
+                    height = train_data_bokehK[0].sample_size[0] if not isinstance(train_data_bokehK[0].sample_size, int) else \
+                    train_data_bokehK[0].sample_size
+                    width = train_data_bokehK[0].sample_size[1] if not isinstance(train_data_bokehK[0].sample_size, int) else \
+                    train_data_bokehK[0].sample_size
                 else:
-                    height = train_data.sample_size[0] if not isinstance(train_data.sample_size,
-                                                                         int) else train_data.sample_size
-                    width = train_data.sample_size[1] if not isinstance(train_data.sample_size,
-                                                                        int) else train_data.sample_size
+                    height = train_data_bokehK.sample_size[0] if not isinstance(train_data_bokehK.sample_size,
+                                                                         int) else train_data_bokehK.sample_size
+                    width = train_data_bokehK.sample_size[1] if not isinstance(train_data_bokehK.sample_size,
+                                                                        int) else train_data_bokehK.sample_size
                 validation_data_iter = iter(validation_dataloader)
 
 
