@@ -116,10 +116,7 @@ do_sanity_check: true
 max_train_epoch:      -1
 max_train_steps:      100000
 validation_steps:       100
-validation_steps_tuple_bokehK: [2, ]
-validation_steps_tuple_temp: [2, ]
-validation_steps_tuple_focal: [1, ]
-validation_steps_tuple_shutter: [1, ]
+validation_steps_tuple: [2, ]
 
 learning_rate:    1.e-4
 
@@ -130,6 +127,5 @@ checkpointing_steps:  100
 
 mixed_precision_training: true
 global_seed: 42
-logger_interval_bokehK: 100
-logger_interval_others: 10
+logger_interval: 10
 
