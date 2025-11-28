@@ -271,6 +271,8 @@ def main(name: str,
     val_ds_temp = CameraColorTemperature(**validation_data)
     val_ds_focal = CameraFocalLength(**validation_data)
     val_ds_shutter = CameraShutterSpeed(**validation_data)
+
+    validation_dataset = ConcatDataset([val_ds_bokehK, val_ds_temp, val_ds_focal, val_ds_shutter])
     validation_dataloader = torch.utils.data.DataLoader(
         validation_dataset,
         batch_size=1,
