@@ -26,7 +26,7 @@ train_data_focal:
   is_Train: true
 
 train_data_shutter:
-  root_path:       "/camera_dataset/camera_shutter_spped/"
+  root_path:       "/camera_dataset/camera_shutter_speed/"
   annotation_json:       "annotations/train_shutter.json"
   sample_n_frames: 5
   sample_size: [256, 384]
@@ -54,7 +54,7 @@ validation_data_focal:
   is_Train: false
 
 validation_data_shutter:
-  root_path:       "/camera_dataset/camera_shutter_spped/"
+  root_path:       "/camera_dataset/camera_shutter_speed/"
   annotation_json:       "annotations/validation_shutter.json"
   sample_n_frames: 5
   sample_size: [256, 384]
