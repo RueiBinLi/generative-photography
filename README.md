@@ -16,7 +16,7 @@ Please see the Configurations in author's [github](https://github.com/pandayuany
 
 ## Inference
 
-```
+```python 
 # For bokeh rendering
 python inference_bokehK.py --config configs/inference_genphoto/adv3_256_384_genphoto_relora_bokehK.yaml --base_scene "A young boy wearing an orange jacket is standing on a crosswalk, waiting to cross the street." --bokehK_list "[2.44, 8.3, 10.1, 17.2, 24.0]"
 
@@ -40,7 +40,7 @@ python inference_color_temperature.py --config configs/inference_genphoto/adv3_2
 *   Modify all the **pretrained_model_path** and **root_path** in `configs/train_genphoto/unified_train.yaml`.
   
 ### 3. Training Examples
-```
+```python 
 # example for training bokeh rendering
 python -m torch.distributed.launch --nproc_per_node=1 --use_env train_all.py --config configs/train_genphoto/unified_train.yaml
 ```
