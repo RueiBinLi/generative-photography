@@ -6,28 +6,28 @@ unet_subfolder: "unet_merged"
 
 train_data_bokehK:
   root_path:       "/camera_dataset/camera_bokehK/"
-  annotation_json:       "annotations/train_bokehK.json"
+  annotation_json:       "annotations/train.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: true
 
 train_data_temp:
   root_path:       "/camera_dataset/camera_color_temperature/"
-  annotation_json:       "annotations/train_temp.json"
+  annotation_json:       "annotations/train.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: true
 
 train_data_focal:
   root_path:       "/camera_dataset/camera_focal_length/"
-  annotation_json:       "annotations/train_focal.json"
+  annotation_json:       "annotations/train.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: true
 
 train_data_shutter:
   root_path:       "/camera_dataset/camera_shutter_speed/"
-  annotation_json:       "annotations/train_shutter.json"
+  annotation_json:       "annotations/train.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: true
@@ -41,21 +41,21 @@ validation_data_bokehK:
 
 validation_data_temp:
   root_path:       "/camera_dataset/camera_color_temperature/"
-  annotation_json:       "annotations/validation_temp.json"
+  annotation_json:       "annotations/validation.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: false
 
 validation_data_focal:
   root_path:       "/camera_dataset/camera_focal_length/"
-  annotation_json:       "annotations/validation_focal.json"
+  annotation_json:       "annotations/validation.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: false
 
 validation_data_shutter:
   root_path:       "/camera_dataset/camera_shutter_speed/"
-  annotation_json:       "annotations/validation_shutter.json"
+  annotation_json:       "annotations/validation.json"
   sample_n_frames: 5
   sample_size: [256, 384]
   is_Train: false
