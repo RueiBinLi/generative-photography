@@ -312,8 +312,8 @@ class CameraFocalLength(Dataset):
 
         self.pixel_transforms = pixel_transforms
         self.is_Train = is_Train
-        self.tokenizer = CLIPTokenizer.from_pretrained("/home/yuan418/data/project/stable-diffusion-v1-5/", subfolder="tokenizer")
-        self.text_encoder = CLIPTextModel.from_pretrained("/home/yuan418/data/project/stable-diffusion-v1-5/", subfolder="text_encoder")
+        self.tokenizer = CLIPTokenizer.from_pretrained("/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/generative_photography/stable-diffusion-v1-5/", subfolder="tokenizer")
+        self.text_encoder = CLIPTextModel.from_pretrained("/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/generative_photography/stable-diffusion-v1-5/", subfolder="text_encoder")
 
 
     def load_image_reader(self, idx):
@@ -560,8 +560,8 @@ class CameraColorTemperature(Dataset):
                                 transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True)]
 
         self.pixel_transforms = pixel_transforms
-        self.tokenizer = CLIPTokenizer.from_pretrained("/home/yuan418/data/project/stable-diffusion-v1-5/", subfolder="tokenizer")
-        self.text_encoder = CLIPTextModel.from_pretrained("/home/yuan418/data/project/stable-diffusion-v1-5/", subfolder="text_encoder")
+        self.tokenizer = CLIPTokenizer.from_pretrained("/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/generative_photography/stable-diffusion-v1-5/", subfolder="tokenizer")
+        self.text_encoder = CLIPTextModel.from_pretrained("/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/generative_photography/stable-diffusion-v1-5/", subfolder="text_encoder")
 
     def load_image_reader(self, idx):
         image_dict = self.dataset[idx]
@@ -799,8 +799,8 @@ class CameraBokehK(Dataset):
                                 transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True)]
 
         self.pixel_transforms = pixel_transforms
-        self.tokenizer = CLIPTokenizer.from_pretrained("/home/yuan418/data/project/stable-diffusion-v1-5/", subfolder="tokenizer")
-        self.text_encoder = CLIPTextModel.from_pretrained("/home/yuan418/data/project/stable-diffusion-v1-5/", subfolder="text_encoder")
+        self.tokenizer = CLIPTokenizer.from_pretrained("/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/generative_photography/stable-diffusion-v1-5/", subfolder="tokenizer")
+        self.text_encoder = CLIPTextModel.from_pretrained("/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/generative_photography/stable-diffusion-v1-5/", subfolder="text_encoder")
 
     def load_image_reader(self, idx):
         image_dict = self.dataset[idx]
@@ -922,7 +922,7 @@ class CameraBokehK(Dataset):
 
 
 def test_camera_bokehK_dataset():
-    root_path = '/home/yuan418/data/project/camera_dataset/camera_bokehK/'
+    root_path = '/home/robby/master/1st_year/Generative_Model_Final_Project/generative-photography/camera_settings/camera_bokehK/'
     annotation_json = 'annotations/inference.json'
 
     print('------------------')
