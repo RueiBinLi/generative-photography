@@ -15,7 +15,7 @@ from einops import rearrange
 from transformers import pipeline, CLIPTextModel, CLIPTokenizer
 
 import sys
-sys.path.append('/data/BokehMe')
+sys.path.append('/data/BokehMe') # modify
 from classical_renderer.scatter import ModuleRenderScatter  
 
 
