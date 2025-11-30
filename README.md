@@ -32,7 +32,7 @@ python inference_color_temperature.py --config configs/inference_genphoto/adv3_2
 
 ## Training
 
-### 1. Prepare Datase
+### 1. Prepare Dataset
 *   Download the training and validation camera setting dataset from the author's [Hugging Face](https://huggingface.co/datasets/pandaphd/camera_settings).
 
 ### 2. Modify the Training Configuration
