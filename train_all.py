@@ -37,6 +37,8 @@ from genphoto.models.attention_processor import AttnProcessor as CustomizedAttnP
 
 from torch.utils.data import ConcatDataset
 
+from tqdm import tqdm
+
 
 def init_dist(launcher="slurm", backend='nccl', port=29500, **kwargs):
     """Initializes distributed environment."""
@@ -368,7 +370,11 @@ def main(name: str,
         camera_adaptor.train()
 
         data_iter = iter(train_dataloader)
-        for step in range(trained_iterations, len(train_dataloader)):
+
+        progress_bar = tqdm(range(trained_iterations, len(train_dataloader)), 
+                            desc=f"Epoch {epoch}", 
+                            disable=not is_main_process)
+        for step in progress_bar:
             iter_start_time = time.time()
 
             batch = next(data_iter)
@@ -466,6 +472,9 @@ def main(name: str,
             optimizer.zero_grad(set_to_none=True)
             global_step += 1
             iter_end_time = time.time()
+
+            if is_main_process:
+                progress_bar.set_postfix({"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]})
 
             # Save checkpoint
             if is_main_process and (global_step % checkpointing_steps == 0):
