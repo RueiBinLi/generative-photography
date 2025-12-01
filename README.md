@@ -37,7 +37,7 @@ python inference_color_temperature.py --config configs/inference_genphoto/adv3_2
 
 ### 2. Install cupy
 ```bash 
-conda install -c conda-forge cupy
+conda install -c conda-forge cupy -y
 ```
 
 ### 3. Modify the Training Configuration
