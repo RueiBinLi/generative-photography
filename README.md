@@ -35,11 +35,16 @@ python inference_color_temperature.py --config configs/inference_genphoto/adv3_2
 ### 1. Prepare Dataset
 *   Download the training and validation camera setting dataset from the author's [Hugging Face](https://huggingface.co/datasets/pandaphd/camera_settings).
 
-### 2. Modify the Training Configuration
+### 2. Install cupy
+```bash 
+conda install -c conda-forge cupy
+```
+
+### 3. Modify the Training Configuration
 *   Modify the `sys.path` and checkpoint path in `genphoto/data/dataset.py`. You can search **modify** to find all the parts.
 *   Modify all the **pretrained_model_path** and **root_path** in `configs/train_genphoto/unified_train.yaml`.
   
-### 3. Training Examples
+### 4. Training Examples
 ```python 
 # example for training bokeh rendering
 python -m torch.distributed.launch --nproc_per_node=1 --use_env train_all.py --config configs/train_genphoto/unified_train.yaml
