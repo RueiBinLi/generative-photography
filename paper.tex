@@ -1,0 +1,134 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+%%%%%%%%% PAPER TYPE  - PLEASE UPDATE FOR FINAL VERSION
+% \usepackage[review]{cvpr}      % To produce the REVIEW version
+\usepackage{cvpr}              % To produce the CAMERA-READY version
+% \usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
+
+% Include other packages here, before hyperref.
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{CJKutf8} % To support Chinese characters if needed for names, though English is preferred in CVPR
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% hyperref with option pagebackref eases the reviewers' job.
+% Please disable hyperref *only* if you encounter grave issues, e.g. with the
+% file validation for the camera-ready version.
+% 
+% If you comment hyperref and then uncomment it, you should delete
+% ReviewTempalte.aux before re-running LaTeX.
+% (Or just hit 'q' on the first LaTeX run, let it finish, and you
+%  should be clear).
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+
+
+% Support for easy cross-referencing
+\usepackage[capitalize]{cleveref}
+\crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Tab.}{Tabs.}
+
+
+%%%%%%%%% PAPER ID  - PLEASE UPDATE
+\def\paperID{Team 9} % *** Enter the Paper ID here
+\def\confName{NTHU Course}
+\def\confYear{2025}
+
+
+\begin{document}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{Final Project: Enhancing Generative Photography with \ LoRA Merging and Scene-Consistent Editing}
+
+\author{
+Team 9\\
+National Yang Ming Chiao Tung University\\
+{\tt\small \{314554029, 314552050, 314552046, 314554035\}@nycu.edu.tw}
+% 廖偉菖, 李睿彬, 莊明憲, 張翊鞍
+}
+\maketitle
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+   This final project report presents our study and improvements on the "Generative Photography" framework \cite{genphoto2025}. While the original method enables precise camera control in Text-to-Image (T2I) synthesis, it faces challenges in simultaneously adjusting multiple parameters and maintaining scene consistency during iterative editing. We propose two key enhancements: (1) investigating advanced LoRA merging strategies (MultiLoRA, LoRA.rar) to combine distinct camera effects (e.g., Bokeh and Focal Length) without interference, and (2) integrating an Image-to-Image (I2I) pipeline utilizing DDIM Inversion and IP-Adapters to allow continuous modification of camera settings on a fixed scene. Our experiments evaluate these methods using physical consistency metrics and perceptual scores (LPIPS, SSIM), aiming to achieve robust, professional-grade virtual photography.
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\section{Introduction}
+\label{sec:intro}
+
+Recent text-to-image (T2I) models have demonstrated impressive generative capabilities \cite{rombach2022high}. However, for professional applications, users require precise control over photographic attributes—specifically \textit{Focal Length}, \textit{Aperture (Bokeh)}, \textit{Shutter Speed}, and \textit{Color Temperature}—independent of the scene's content. A common issue with current T2I models is "scene inconsistency": changing a prompt from "50mm lens" to "wide angle" often drastically alters the subject layout and identity, rather than just the optical perspective.
+
+The recent "Generative Photography" paper \cite{genphoto2025} addresses this by learning specific camera intrinsics. In this final project, we aim to reproduce their results and address specific limitations we identified:
+\begin{enumerate}
+    \item \textbf{Multi-Parameter Control:} The original approach often treats parameters in isolation. We explore merging multiple Low-Rank Adaptations (LoRAs) \cite{hu2021lora} to control, for example, both aperture and color temperature simultaneously.
+    \item \textbf{Continuous Editing (I2I):} The T2I nature of the baseline makes it difficult to fine-tune a generated image. We introduce an inversion-based workflow (DDIM/Null-text inversion) to "lock" the scene content while adjusting camera parameters.
+\end{enumerate}
+
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Generative Photography}
+The baseline paper \cite{genphoto2025} introduces a dataset and training scheme to inject camera physics into diffusion models. It focuses on decoupling semantic content from photographic style using dedicated LoRAs.
+
+\subsection{LoRA Merging}
+To achieve multi-attribute control, we reference works like MultiLoRA and LoRA.rar, which propose methods to fuse multiple fine-tuned modules. A naive average of weights often leads to feature degradation; thus, we investigate weighted fusion and other merging techniques to maintain the efficacy of each camera parameter.
+
+\subsection{Inversion and Consistency}
+Techniques such as DDIM Inversion and Null-text Inversion are pivotal for editing real or generated images. They reconstruct the initial noise latent that produces a specific image, allowing us to modify the conditioning (e.g., change "f/1.8" to "f/16") while preserving the original composition (SSIM).
+
+\section{Method}
+\label{sec:method}
+
+Our methodology builds upon the pre-trained models from the Generative Photography framework and extends them via the following pipeline.
+
+\subsection{Data Generation & LoRA Training}
+We follow the baseline approach to generate a synthetic dataset annotated with camera parameters (e.g., "lens 70mm", "shutter 0.5s"). We train individual LoRA modules for each of the four target attributes: Bokeh, Focal Length, Shutter Speed, and Color Temperature.
+
+\subsection{Multi-LoRA Merging}
+To enable simultaneous control (e.g., a long-exposure shot with a warm color temperature), we experiment with merging strategies:
+\begin{equation}
+    W_{merged} = W_{base} + \sum_{i} \alpha_i \Delta W_i
+\end{equation}
+where \(\alpha_i\) represents the strength of each camera effect. We analyze the trade-offs between interference and effect strength when combining conflicting parameters (e.g., deep depth-of-field vs. strong bokeh).
+
+\subsection{Scene-Consistent I2I Pipeline}
+To fix the "scene inconsistency" problem of T2I, we implement the following I2I workflow:
+\begin{enumerate}
+    \item \textbf{Input:} A base image (generated or real).
+    \item \textbf{Inversion:} We apply DDIM Inversion to obtain the latent code $z_T$.
+    \item \textbf{Editing:} We perform the reverse diffusion process starting from $z_T$, injecting the specific Camera LoRA (or merged LoRAs) and using IP-Adapter guidance to preserve subject identity.
+    \item \textbf{Output:} A re-rendered version of the scene with the new camera attributes applied.
+\end{enumerate}
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Metrics}
+We evaluate our improvements using:
+\begin{itemize}
+    \item \textbf{Physical Consistency:} Pearson correlation between the prompt parameter and the measured image attribute (e.g., blur variance for Bokeh, SIFT matching for Focal Length).
+    \item \textbf{Scene Consistency:} LPIPS and SSIM scores between the source image and the edited image. High SSIM indicates successful preservation of the scene layout.
+    \item \textbf{Text Alignment:} CLIP scores to ensure the camera effect is perceptually recognized.
+    \item \textbf{Human Survey (MOS):} Subjective quality assessment.
+\end{itemize}
+
+\subsection{Preliminary Findings}
+Our initial experiments with DDIM Inversion demonstrate a significant improvement in SSIM compared to naive T2I prompting, effectively fixing the scene layout. However, we observe that strong LoRA scales can sometimes override the inversion constraints, introducing artifacts. Optimizing the LoRA merge ratios is critical for balancing effect visibility and image quality.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+In this project, we improved the Generative Photography framework by enabling scene-consistent editing and multi-parameter control. By integrating DDIM inversion and investigating LoRA merging, we provide a more robust tool for virtual photography, bridging the gap between generative AI and professional camera workflows.
+
+%%%%%%%%% REFERENCES
+{\small
+\bibliographystyle{ieeenat_fullname}
+\bibliography{egbib}
+}
+
+\end{document}
