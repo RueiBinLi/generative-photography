@@ -269,12 +269,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True, help="Path to YAML configuration file")
     parser.add_argument("--base_scene", type=str, required=True, help="invariant scene caption as JSON string")
-    parser.add_argument("--bokehK_list", type=str, required=True, help="Bokeh K values as JSON string")
-    parser.add_argument("--color_temperature_list", type=str, required=True, help="color_temperature values as JSON string")
-    parser.add_argument("--focal_length_list", type=str, required=True, help="focal_length values as JSON string")
-    parser.add_argument("--shutter_speed_list", type=str, required=True, help="shutter_speed values as JSON string")
+    parser.add_argument("--bokehK_list", type=str, required=False, default='', help="Bokeh K values as JSON string")
+    parser.add_argument("--color_temperature_list", type=str, required=False, default='', help="color_temperature values as JSON string")
+    parser.add_argument("--focal_length_list", type=str, required=False, default='', help="focal_length values as JSON string")
+    parser.add_argument("--shutter_speed_list", type=str, required=False, default='', help="shutter_speed values as JSON string")
     parser.add_argument("--filename", type=str, required=True, help="filename for gif")
     args = parser.parse_args()
+    
+    if args.bokehK_list == '' and args.color_temperature_list == '' and args.focal_length_list == '' and args.shutter_speed_list == '':
+        logger.info("Error: You must input at least one camera setting.")
+        print("Error: You must input at least one camera setting.")
+        exit(1)
+        
     main(args.config, args.base_scene, args.bokehK_list, args.color_temperature_list, args.focal_length_list, args.shutter_speed_list, args.filename)
 
     # usage example
