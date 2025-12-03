@@ -39,53 +39,6 @@ def create_bokehK_embedding(bokehK_values, target_height, target_width):
     
     return bokehK_embedding
 
-def kelvin_to_rgb(kelvin):
-    if torch.is_tensor(kelvin):
-        kelvin = kelvin.cpu().item()  
-
-    temp = kelvin / 100.0
-
-    if temp <= 66:
-        red = 255
-        green = 99.4708025861 * np.log(temp) - 161.1195681661 if temp > 0 else 0
-        if temp <= 19:
-            blue = 0
-        else:
-            blue = 138.5177312231 * np.log(temp - 10) - 305.0447927307
-
-    elif 66 < temp <= 88:
-        red = 0.5 * (255 + 329.698727446 * ((temp - 60) ** -0.19332047592))
-        green = 0.5 * (288.1221695283 * ((temp - 60) ** -0.1155148492) + 
-                       (99.4708025861 * np.log(temp) - 161.1195681661 if temp > 0 else 0))
-        blue = 0.5 * (138.5177312231 * np.log(temp - 10) - 305.0447927307 + 255)
-
-    else:
-        red = 329.698727446 * ((temp - 60) ** -0.19332047592)
-        green = 288.1221695283 * ((temp - 60) ** -0.1155148492)
-        blue = 255
-
-    return np.array([red, green, blue], dtype=np.float32) / 255.0
-
-
-def create_color_temperature_embedding(color_temperature_values, target_height, target_width, min_color_temperature=2000, max_color_temperature=10000):
-
-    f = color_temperature_values.shape[0]
-    rgb_factors = []
-
-    # Compute RGB factors based on kelvin_to_rgb function
-    for color_temperature in color_temperature_values.squeeze():
-        kelvin = min_color_temperature + (color_temperature * (max_color_temperature - min_color_temperature))  # Map normalized color_temperature to actual Kelvin
-        rgb = kelvin_to_rgb(kelvin)
-        rgb_factors.append(rgb)
-    
-    # Convert to tensor and expand to target dimensions
-    rgb_factors = torch.tensor(rgb_factors).float()  # [f, 3]
-    rgb_factors = rgb_factors.unsqueeze(2).unsqueeze(3)  # [f, 3, 1, 1]
-    color_temperature_embedding = rgb_factors.expand(f, 3, target_height, target_width)  # [f, 3, target_height, target_width]
-
-    return color_temperature_embedding
-
-
 class Camera_Embedding(Dataset):
     def __init__(self, bokehK_values, tokenizer, text_encoder, device, sample_size=[256, 384]):
         self.bokehK_values = bokehK_values.to(device)
