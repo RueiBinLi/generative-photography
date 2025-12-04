@@ -83,8 +83,8 @@ def load_models(cfg):
         camera_encoder_bokehK.load_state_dict(ckpt['camera_encoder_state_dict'], strict=False)
     
     if getattr(cfg, 'camera_adaptor_ckpt_temp', None):
-        print(f"Loading Color Temperature Encoder: {cfg.camera_adapter_ckpt_temp}")
-        ckpt = torch.load(cfg.camera_adapter_ckpt_temp, map_location=device)
+        print(f"Loading Color Temperature Encoder: {cfg.camera_adaptor_ckpt_temp}")
+        ckpt = torch.load(cfg.camera_adaptor_ckpt_temp, map_location=device)
         camera_encoder_temp.load_state_dict(ckpt['camera_encoder_state_dict'], strict=False)
 
     if getattr(cfg, 'camera_adaptor_ckpt_focal', None):
