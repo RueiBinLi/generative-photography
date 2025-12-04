@@ -152,7 +152,7 @@ def create_color_temperature_embedding(color_temperature_values, target_height, 
 
 
 
-class Camera_Embedding_color(Dataset):
+class Camera_Embedding_temp(Dataset):
     def __init__(self, color_temperature_values, tokenizer, text_encoder, device, sample_size=[256, 384]):
         self.color_temperature_values = color_temperature_values.to(device)
         self.tokenizer = tokenizer
