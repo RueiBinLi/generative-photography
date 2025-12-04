@@ -14,7 +14,7 @@ from einops import rearrange
 
 from genphoto.pipelines.pipeline_animation import GenPhotoPipeline
 from genphoto.models.unet import UNet3DConditionModelCameraCond
-from genphoto.models.camera_adaptor import CameraCameraEncoder, CameraAdaptor
+from genphoto.models.camera_adaptor import CameraCameraEncoder, CameraAdaptor, EnsembleCameraEncoder
 from genphoto.utils.util import save_videos_grid
 from inference_settings import Camera_Embedding_bokehK, Camera_Embedding_temp, Camera_Embedding_focal, Camera_Embedding_shutter
 
@@ -22,28 +22,6 @@ import torch as nn
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-class EnsembleCameraEncoder(nn.Module):
-    def __init__(self, encoder_dict):
-        super().__init__()
-        self.encoders = nn.ModuleDict(encoder_dict)
-
-    def forward(self, camera_embedding):
-        total_feature = None
-
-        for name, encoder in self.encoders.items():
-            if name in camera_embedding:
-                input = camera_embedding[name]
-
-                feature = encoder(input)
-
-                if total_feature is None:
-                    total_feature = feature
-                else:
-                    total_feature = total_feature + feature
-            else:
-                print(f"Warning: {name} embedding not found in input.")
-        return total_feature
 
 def load_models(cfg):
 
@@ -99,21 +77,26 @@ def load_models(cfg):
         assert len(mm_u) == 0
         print("Loading done")
 
-    if cfg.camera_adaptor_ckpt_bokehK:
+    if getattr(cfg, 'camera_adaptor_ckpt_bokehK', None):
+        print(f"Loading BokehK Encoder: {cfg.camera_adaptor_ckpt_bokehK}")
         ckpt = torch.load(cfg.camera_adaptor_ckpt_bokehK, map_location=device)
         camera_encoder_bokehK.load_state_dict(ckpt['camera_encoder_state_dict'], strict=False)
-
-    if cfg.camera_adaptor_ckpt_temp:
-        ckpt = torch.load(cfg.camera_adaptor_ckpt_temp, map_location=device)
+    
+    if getattr(cfg, 'camera_adaptor_ckpt_temp', None):
+        print(f"Loading Color Temperature Encoder: {cfg.camera_adapter_ckpt_temp}")
+        ckpt = torch.load(cfg.camera_adapter_ckpt_temp, map_location=device)
         camera_encoder_temp.load_state_dict(ckpt['camera_encoder_state_dict'], strict=False)
 
-    if cfg.camera_adaptor_ckpt_focal:
+    if getattr(cfg, 'camera_adaptor_ckpt_focal', None):
+        print(f"Loading Focal Length Encoder: {cfg.camera_adaptor_ckpt_focal}")
         ckpt = torch.load(cfg.camera_adaptor_ckpt_focal, map_location=device)
         camera_encoder_focal.load_state_dict(ckpt['camera_encoder_state_dict'], strict=False)
 
-    if cfg.camera_adaptor_ckpt_shutter:
+    if getattr(cfg, 'camera_adaptor_ckpt_shutter', None):
+        print(f"Loading Shutter Speed Encoder: {cfg.camera_adaptor_ckpt_shutter}")
         ckpt = torch.load(cfg.camera_adaptor_ckpt_shutter, map_location=device)
         camera_encoder_shutter.load_state_dict(ckpt['camera_encoder_state_dict'], strict=False)
+    
 
     ensemble_encoder = EnsembleCameraEncoder({
         'bokehK': camera_encoder_bokehK,
@@ -130,6 +113,31 @@ def load_models(cfg):
         scheduler=noise_scheduler,
         camera_encoder=ensemble_encoder
     ).to(device)
+
+    logger.info("Loading and Merging LoRAs...")
+
+    active_adapters = []
+
+    def load_lora_safe(ckpt_path, adapter_name):
+        if ckpt_path and os.path.exists(ckpt_path):
+            print(f"Loading LoRA: {adapter_name} from {ckpt_path}")
+
+            try:
+                pipeline.load_lora_weights(ckpt_path, adapter_name=adapter_name)
+                active_adapters.append(adapter_name)
+            except Exception as e:
+                print(f"Failed to load {adapter_name}: {e}")
+
+    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_bokehK', None), "bokehK")
+    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_temp', None), "temp")
+    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_focal', None), "focal")
+    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_shutter', None), "shutter")
+
+    if  active_adapters:
+        print(f"Activating adapters: {active_adapters}")
+        pipeline.set_adapters(active_adapters, adapter_weights=[0.5] * len(active_adapters))
+    else:
+        print("No LoRAs loaded. Running with base model only.")
 
     pipeline.enable_vae_slicing()
 
@@ -207,7 +215,7 @@ def main(config_path, base_scene, bokehK_list, color_temperature_list, focal_len
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, required=True, help="Path to YAML configuration file")
+    parser.add_argument("--config", type=str, required=True, help="Path to YAML dfasfd file")
     parser.add_argument("--base_scene", type=str, required=True, help="invariant scene caption as JSON string")
     parser.add_argument("--bokehK_list", type=str, required=False, default='', help="Bokeh K values as JSON string")
     parser.add_argument("--color_temperature_list", type=str, required=False, default='', help="color_temperature values as JSON string")
