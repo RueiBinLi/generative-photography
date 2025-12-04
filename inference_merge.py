@@ -147,44 +147,36 @@ def load_models(cfg):
 def run_inference(pipeline, tokenizer, text_encoder, base_scene, bokehK_list, color_temperature_list, focal_length_list, shutter_speed_list, filename, output_dir, device, video_length=5, height=256, width=384):
     os.makedirs(output_dir, exist_ok=True)
 
-    bokehK_list_str = bokehK_list
-    bokehK_values = json.loads(bokehK_list_str)
-    bokehK_values = torch.tensor(bokehK_values).unsqueeze(1)
+    embeddings = {}
+    num_frames = video_length # default
 
-    camera_embedding_bokehK = Camera_Embedding_bokehK(bokehK_values, tokenizer, text_encoder, device).load()
-    camera_embedding_bokehK = rearrange(camera_embedding_bokehK.unsqueeze(0), "b f c h w -> b c f h w")
+    if bokehK_list:
+        bokehK_values = json.loads(bokehK_list)
+        num_frames = len(bokehK_values)
+        bokehK_values = torch.tensor(bokehK_values).unsqueeze(1)
+        emb = Camera_Embedding_bokehK(bokehK_values, tokenizer, text_encoder, device).load()
+        embeddings['bokehK'] = rearrange(emb.unsqueeze(0), "b f c h w -> b c f h w")
 
-    color_temperature_list_str = color_temperature_list
-    color_temperature_values = json.loads(color_temperature_list_str)
-    color_temperature_values = torch.tensor(color_temperature_values).unsqueeze(1)
+    if color_temperature_list:
+        color_temperature_values = json.loads(color_temperature_list)
+        num_frames = len(color_temperature_values)
+        color_temperature_values = torch.tensor(color_temperature_values).unsqueeze(1)
+        emb = Camera_Embedding_temp(color_temperature_values, tokenizer, text_encoder, device).load()
+        embeddings['temp'] = rearrange(emb.unsqueeze(0), "b f c h w -> b c f h w")
+
+    if focal_length_list:
+        focal_length_values = json.loads(focal_length_list)
+        num_frames = len(focal_length_values)
+        focal_length_values = torch.tensor(focal_length_values).unsqueeze(1)
+        emb = Camera_Embedding_focal(focal_length_values, tokenizer, text_encoder, device).load()
+        embeddings['focal'] = rearrange(emb.unsqueeze(0), "b f c h w -> b c f h w")
     
-    num_frames = len(color_temperature_values)
-
-    camera_embedding_temp = Camera_Embedding_temp(color_temperature_values, tokenizer, text_encoder, device).load()
-    camera_embedding_temp = rearrange(camera_embedding_temp.unsqueeze(0), "b f c h w -> b c f h w")
-
-    focal_length_list_str = focal_length_list
-    focal_length_values = json.loads(focal_length_list_str)
-    focal_length_values = torch.tensor(focal_length_values).unsqueeze(1)
-
-    num_frames = len(focal_length_values)
-
-    camera_embedding_focal = Camera_Embedding_focal(focal_length_values, tokenizer, text_encoder, device).load()
-    camera_embedding_focal = rearrange(camera_embedding_focal.unsqueeze(0), "b f c h w -> b c f h w")
-
-    shutter_speed_list_str = shutter_speed_list
-    shutter_speed_values = json.loads(shutter_speed_list_str)
-    shutter_speed_values = torch.tensor(shutter_speed_values).unsqueeze(1)
-
-    camera_embedding_shutter = Camera_Embedding_shutter(shutter_speed_values, tokenizer, text_encoder, device).load()
-    camera_embedding_shutter = rearrange(camera_embedding_shutter.unsqueeze(0), "b f c h w -> b c f h w")
-
-    embeddings = {
-        'bokehK': camera_embedding_bokehK,
-        'temp': camera_embedding_temp,
-        'focal': camera_embedding_focal,
-        'shutter': camera_embedding_shutter,
-    }
+    if shutter_speed_list:
+        shtter_speed_values = json.loads(shutter_speed_list)
+        num_frames = len(shtter_speed_values)
+        shtter_speed_values = torch.tensor(shtter_speed_values).unsqueeze(1)
+        emb = Camera_Embedding_shutter(shtter_speed_values, tokenizer, text_encoder, device).load()
+        embeddings['shutter'] = rearrange(emb.unsqueeze(0), "b f c h w -> b c f h w")
 
     with torch.no_grad():
         sample = pipeline(
