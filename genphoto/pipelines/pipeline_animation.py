@@ -604,7 +604,16 @@ class GenPhotoPipeline(AnimationPipeline):
         if isinstance(prompt, list):
             batch_size = len(prompt)
 
-        device = camera_embedding[0].device if isinstance(camera_embedding, list) else camera_embedding.device
+        # device = camera_embedding[0].device if isinstance(camera_embedding, list) else camera_embedding.device
+        # --- modify ---
+        if isinstance(camera_embedding, list):
+            device = camera_embedding[0].device
+        elif isinstance(camera_embedding, dict):
+            # Get device from the first value in the dict
+            device = next(iter(camera_embedding.values())).device
+        else:
+            device = camera_embedding.device
+        # --- modify ---
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`
         # corresponds to doing no classifier free guidance.
@@ -641,6 +650,21 @@ class GenPhotoPipeline(AnimationPipeline):
 
         # Prepare extra step kwargs.
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
+        # if isinstance(camera_embedding, list):
+        #     assert all([x.ndim == 5 for x in camera_embedding])
+        #     bs = camera_embedding[0].shape[0]
+        #     camera_embedding_features = []
+        #     for pe in camera_embedding:
+        #         camera_embedding_feature = self.camera_encoder(pe)
+        #         camera_embedding_feature = [rearrange(x, '(b f) c h w -> b c f h w', b=bs) for x in camera_embedding_feature]
+        #         camera_embedding_features.append(camera_embedding_feature)
+        # else:
+        #     bs = camera_embedding.shape[0]
+        #     assert camera_embedding.ndim == 5
+        #     camera_embedding_features = self.camera_encoder(camera_embedding)       # bf, c, h, w
+        #     camera_embedding_features = [rearrange(x, '(b f) c h w -> b c f h w', b=bs)
+        #                                for x in camera_embedding_features]
+        # --- modfiy ---
         if isinstance(camera_embedding, list):
             assert all([x.ndim == 5 for x in camera_embedding])
             bs = camera_embedding[0].shape[0]
@@ -649,12 +673,26 @@ class GenPhotoPipeline(AnimationPipeline):
                 camera_embedding_feature = self.camera_encoder(pe)
                 camera_embedding_feature = [rearrange(x, '(b f) c h w -> b c f h w', b=bs) for x in camera_embedding_feature]
                 camera_embedding_features.append(camera_embedding_feature)
+        
+        elif isinstance(camera_embedding, dict):
+            # Extract batch size from the first item in the dictionary
+            first_key = next(iter(camera_embedding))
+            bs = camera_embedding[first_key].shape[0]
+            
+            # Pass the whole dictionary to the EnsembleCameraEncoder
+            camera_embedding_features = self.camera_encoder(camera_embedding) # Returns [bf, c, h, w] list
+            
+            # Rearrange dimensions
+            camera_embedding_features = [rearrange(x, '(b f) c h w -> b c f h w', b=bs)
+                                       for x in camera_embedding_features]
         else:
+            # Standard Tensor case
             bs = camera_embedding.shape[0]
             assert camera_embedding.ndim == 5
             camera_embedding_features = self.camera_encoder(camera_embedding)       # bf, c, h, w
             camera_embedding_features = [rearrange(x, '(b f) c h w -> b c f h w', b=bs)
                                        for x in camera_embedding_features]
+        # --- modify ---
 
         # Denoising loop
         num_warmup_steps = len(timesteps) - num_inference_steps * self.scheduler.order
