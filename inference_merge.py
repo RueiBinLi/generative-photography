@@ -224,5 +224,5 @@ if __name__ == "__main__":
     main(args.config, args.base_scene, args.bokehK_list, args.color_temperature_list, args.focal_length_list, args.shutter_speed_list, args.filename)
 
     # usage example
-    # python inference_bokehK.py --config configs/inference_genphoto/adv3_256_384_genphoto_relora_bokehK.yaml --base_scene "A young boy wearing an orange jacket is standing on a crosswalk, waiting to cross the street." --bokehK_list "[2.44, 8.3, 10.1, 17.2, 24.0]"
+    # python inference_merge.py --config configs/inference_genphoto/merge_configs.yaml --base_scene "A young boy wearing an orange jacket is standing on a crosswalk, waiting to cross the street." --bokehK_list "[2.44, 8.3, 10.1, 17.2, 24.0]" --color_temperature_list "[5455.0, 5155.0, 5555.0, 6555.0, 7555.0]"
 
