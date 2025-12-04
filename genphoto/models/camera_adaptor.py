@@ -250,6 +250,10 @@ class EnsembleCameraEncoder(nn.Module):
         super().__init__()
         self.encoders = nn.ModuleDict(encoder_dict)
 
+    @property
+    def dtype(self):
+        return next(self.encoders.parameters()).dtype
+
     def forward(self, camera_embedding):
         total_feature = None
 
