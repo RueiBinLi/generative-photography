@@ -116,28 +116,45 @@ def load_models(cfg):
 
     logger.info("Loading and Merging LoRAs...")
 
-    active_adapters = []
+    lora_configs = [
+        {"path": getattr(cfg, "camera_adaptor_ckpt_bokehK", None), "scale": 0.5},
+        {"path": getattr(cfg, "camera_adaptor_ckpt_temp", None), "scale": 0.5},
+        {"path": getattr(cfg, "camera_adaptor_ckpt_focal", None), "scale": 0.5},
+        {"path": getattr(cfg, "camera_adaptor_ckpt_shutter", None), "scale": 0.5},
+    ]
 
-    def load_lora_safe(ckpt_path, adapter_name):
+    merged_lora_state_dict = {}
+    valid_loras_count = 0
+
+    for lora_info in lora_configs:
+        ckpt_path = lora_info["path"]
+        scale = lora_info["scale"]
+
         if ckpt_path and os.path.exists(ckpt_path):
-            print(f"Loading LoRA: {adapter_name} from {ckpt_path}")
+            print(f"Merge LoRA from: {ckpt_path} with scale {scale}")
 
-            try:
-                pipeline.load_lora_weights(ckpt_path, adapter_name=adapter_name)
-                active_adapters.append(adapter_name)
-            except Exception as e:
-                print(f"Failed to load {adapter_name}: {e}")
+            ckpt = torch.load(ckpt_path, map_location="cpu")
 
-    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_bokehK', None), "bokehK")
-    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_temp', None), "temp")
-    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_focal', None), "focal")
-    load_lora_safe(getattr(cfg, 'camera_adaptor_ckpt_shutter', None), "shutter")
+            if "lora_state_dict" in ckpt:
+                current_lora_dict = ckpt["lora_state_dict"]
+            else:
+                current_lora_dict = ckpt
+        for key, weight in current_lora_dict.items():
+            weight = weight.to(dtype=torch.float32)
 
-    if  active_adapters:
-        print(f"Activating adapters: {active_adapters}")
-        pipeline.set_adapters(active_adapters, adapter_weights=[0.5] * len(active_adapters))
+            if key not in merged_lora_state_dict:
+                merged_lora_state_dict[key] = weight * scale
+            else:
+                merged_lora_state_dict[key] += weight * scale
+        
+        valid_loras_count += 1
+
+    if valid_loras_count > 0:
+        print(f"Successfully merged {valid_loras_count} LoRAs. Loading into UNet...")
+        msg = unet.load_state_dict(merged_lora_state_dict, strict=False)
+        print(f"LoRA Load Result: {msg}")
     else:
-        print("No LoRAs loaded. Running with base model only.")
+        print("No valid LoRAs found to merge.")
 
     pipeline.enable_vae_slicing()
 
