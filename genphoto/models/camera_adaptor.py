@@ -244,3 +244,25 @@ class CameraCameraEncoder(nn.Module):
                 x = rearrange(x, '(b h w) f c -> (b f) c h w', h=h, w=w)
             features.append(x)
         return features
+
+class EnsembleCameraEncoder(nn.Module):
+    def __init__(self, encoder_dict):
+        super().__init__()
+        self.encoders = nn.ModuleDict(encoder_dict)
+
+    def forward(self, camera_embedding):
+        total_feature = None
+
+        for name, encoder in self.encoders.items():
+            if name in camera_embedding:
+                input = camera_embedding[name]
+
+                feature = encoder(input)
+
+                if total_feature is None:
+                    total_feature = feature
+                else:
+                    total_feature = total_feature + feature
+            else:
+                print(f"Warning: {name} embedding not found in input.")
+        return total_feature
