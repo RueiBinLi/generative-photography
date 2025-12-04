@@ -140,6 +140,9 @@ def load_models(cfg):
             else:
                 current_lora_dict = ckpt
         for key, weight in current_lora_dict.items():
+            if not torch.is_tensor(weight):
+                continue
+
             weight = weight.to(dtype=torch.float32)
 
             if key not in merged_lora_state_dict:
