@@ -114,53 +114,6 @@ def load_models(cfg):
         camera_encoder=ensemble_encoder
     ).to(device)
 
-    logger.info("Loading and Merging LoRAs...")
-
-    lora_configs = [
-        {"path": getattr(cfg, "camera_adaptor_ckpt_bokehK", None), "scale": 0.5},
-        {"path": getattr(cfg, "camera_adaptor_ckpt_temp", None), "scale": 0.5},
-        {"path": getattr(cfg, "camera_adaptor_ckpt_focal", None), "scale": 0.5},
-        {"path": getattr(cfg, "camera_adaptor_ckpt_shutter", None), "scale": 0.5},
-    ]
-
-    merged_lora_state_dict = {}
-    valid_loras_count = 0
-
-    for lora_info in lora_configs:
-        ckpt_path = lora_info["path"]
-        scale = lora_info["scale"]
-
-        if ckpt_path and os.path.exists(ckpt_path):
-            print(f"Merge LoRA from: {ckpt_path} with scale {scale}")
-
-            ckpt = torch.load(ckpt_path, map_location="cpu")
-
-            if "lora_state_dict" in ckpt:
-                current_lora_dict = ckpt["lora_state_dict"]
-            else:
-                current_lora_dict = ckpt
-            for key, weight in current_lora_dict.items():
-                if not torch.is_tensor(weight):
-                    continue
-
-                weight = weight.to(dtype=torch.float32)
-
-                if key not in merged_lora_state_dict:
-                    merged_lora_state_dict[key] = weight * scale
-                else:
-                    merged_lora_state_dict[key] += weight * scale
-        
-            valid_loras_count += 1
-        else:
-            print(f"Warning: Checkpoint not found or invalid: {ckpt_path}")
-
-    if valid_loras_count > 0:
-        print(f"Successfully merged {valid_loras_count} LoRAs. Loading into UNet...")
-        msg = unet.load_state_dict(merged_lora_state_dict, strict=False)
-        print(f"LoRA Load Result: {msg}")
-    else:
-        print("No valid LoRAs found to merge.")
-
     pipeline.enable_vae_slicing()
 
     return pipeline, device
@@ -204,7 +157,7 @@ def run_inference(pipeline, tokenizer, text_encoder, base_scene, bokehK_list, co
         sample = pipeline(
             prompt=base_scene,
             camera_embedding=embeddings,
-            video_length=video_length,
+            video_length=num_frames,
             height=height,
             width=width,
             num_inference_steps=25,
