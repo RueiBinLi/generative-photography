@@ -26,8 +26,17 @@ def merge_sequential():
         print(f"[{i+1}/4] Processing {item['name']}...")
         
         try:
-            pipe.load_lora_weights(item['path'])
-            print(f"   - Loaded weights from {item['path']}")
+            print(f"   - Reading checkpoint: {item['path']}...")
+            
+            checkpoint = torch.load(item['path'], map_location="cpu")
+            
+            if "lora_state_dict" in checkpoint:
+                lora_weights = checkpoint["lora_state_dict"]
+            else:
+                lora_weights = checkpoint
+                
+            pipe.load_lora_weights(lora_weights)
+            print(f"   - Loaded LoRA state dict successfully.")
 
             pipe.fuse_lora(lora_scale=item['scale'])
             print(f"   - Fused into UNet with scale {item['scale']}")
