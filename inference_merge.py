@@ -139,18 +139,20 @@ def load_models(cfg):
                 current_lora_dict = ckpt["lora_state_dict"]
             else:
                 current_lora_dict = ckpt
-        for key, weight in current_lora_dict.items():
-            if not torch.is_tensor(weight):
-                continue
+            for key, weight in current_lora_dict.items():
+                if not torch.is_tensor(weight):
+                    continue
 
-            weight = weight.to(dtype=torch.float32)
+                weight = weight.to(dtype=torch.float32)
 
-            if key not in merged_lora_state_dict:
-                merged_lora_state_dict[key] = weight * scale
-            else:
-                merged_lora_state_dict[key] += weight * scale
+                if key not in merged_lora_state_dict:
+                    merged_lora_state_dict[key] = weight * scale
+                else:
+                    merged_lora_state_dict[key] += weight * scale
         
-        valid_loras_count += 1
+            valid_loras_count += 1
+        else:
+            print(f"Warning: Checkpoint not found or invalid: {ckpt_path}")
 
     if valid_loras_count > 0:
         print(f"Successfully merged {valid_loras_count} LoRAs. Loading into UNet...")
