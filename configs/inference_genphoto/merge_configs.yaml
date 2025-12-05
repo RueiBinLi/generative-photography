@@ -1,6 +1,6 @@
 output_dir: "inference_output/genphoto_merge"
 # pretrained_model_path: "/stable-diffusion-v1-5"
-pretrained_model_path: "/final_merged_model_sequential"
+pretrained_model_path: "/final_merged_model_manual"
 unet_subfolder: "unet"
 
 camera_adaptor_ckpt_bokehK: "/weights/checkpoint-bokehK.ckpt"
